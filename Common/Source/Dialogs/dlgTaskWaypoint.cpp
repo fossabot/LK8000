@@ -70,12 +70,25 @@ static void SetValues(bool first=false) {
   if (wp) {
     DataField* dfe = wp->GetDataField();
     if (first) {
-	// LKTOKEN  _@M210_ = "Cylinder" 
+      // LKTOKEN  _@M210_ = "Cylinder" 
       dfe->addEnumText(MsgToken(210));
-	// LKTOKEN  _@M393_ = "Line" 
+      // LKTOKEN  _@M393_ = "Line" 
       dfe->addEnumText(MsgToken(393));
-	// LKTOKEN  _@M274_ = "FAI Sector" 
-      dfe->addEnumText(MsgToken(274));
+      if (gTaskType == TSK_DEFAULT || gTaskType == TSK_GP) {
+        // LKTOKEN  _@M274_ = "FAI Sector" 
+        dfe->addEnumText(MsgToken(274));
+      }
+    } else {
+      if ((gTaskType == TSK_DEFAULT || gTaskType == TSK_GP)) {
+        if (dfe->getCount() == 2) {
+          // LKTOKEN  _@M274_ = "FAI Sector"
+          dfe->addEnumText(MsgToken(274));
+        }
+      } else {
+        if (dfe->getCount() == 3) {
+          dfe->removeLastEnum();
+        }
+      }
     }
     dfe->Set(FinishLine);
     wp->RefreshDisplay();
@@ -88,18 +101,31 @@ static void SetValues(bool first=false) {
     wp->RefreshDisplay();
   }
 
-  wp = (WndProperty*)wf->FindByName(TEXT("prpTaskStartLine"));
+  wp = (WndProperty*) wf->FindByName(TEXT("prpTaskStartLine"));
   if (wp) {
     DataField* dfe = wp->GetDataField();
     if (first) {
-	// LKTOKEN  _@M210_ = "Cylinder" 
+      // LKTOKEN  _@M210_ = "Cylinder" 
       dfe->addEnumText(MsgToken(210));
-	// LKTOKEN  _@M393_ = "Line" 
+      // LKTOKEN  _@M393_ = "Line" 
       dfe->addEnumText(MsgToken(393));
-	// LKTOKEN  _@M274_ = "FAI Sector" 
-      dfe->addEnumText(MsgToken(274));
+      if (gTaskType == TSK_DEFAULT || gTaskType == TSK_GP) {
+        // LKTOKEN  _@M274_ = "FAI Sector" 
+        dfe->addEnumText(MsgToken(274));
+      }
+    } else {
+      if ((gTaskType == TSK_DEFAULT || gTaskType == TSK_GP)) {
+        if (dfe->getCount() == 2) {
+          // LKTOKEN  _@M274_ = "FAI Sector"
+          dfe->addEnumText(MsgToken(274));
+        }
+      } else {
+        if (dfe->getCount() == 3) {
+          dfe->removeLastEnum();
+        }
+      }
     }
-    dfe->SetDetachGUI(true); // disable call to OnAATEnabled
+    dfe->SetDetachGUI(true); // disable call to OnTaskType
     dfe->Set(StartLine);
     dfe->SetDetachGUI(false);
     wp->RefreshDisplay();
@@ -116,7 +142,7 @@ static void SetValues(bool first=false) {
   if (wp) {
     // 110223 CAN ANYONE PLEASE CHECK WHAT THE HACK IS A BOOL FOR BILL GATES? BECAUSE IF FALSE IS -1 THEN
     // WE HAVE MANY PROBLEMS! I THINK IT IS TIME TO GO BACK TO bool AND GET RID OF MS BOOLS!!
-  //  wp->SetVisible((AATEnabled==0) || (twItemIndex >0) );
+    wp->SetVisible(gTaskType==TSK_DEFAULT);
     DataField* dfe = wp->GetDataField();
     if (first) {
 	// LKTOKEN  _@M210_ = "Cylinder" 
@@ -127,7 +153,7 @@ static void SetValues(bool first=false) {
       	// LKTOKEN  _@M393_ = "Line" 
       dfe->addEnumText(MsgToken(393));
     }
-    dfe->SetDetachGUI(true); // disable call to OnAATEnabled
+    dfe->SetDetachGUI(true); // disable call to OnTaskType
     dfe->Set(SectorType);
     dfe->SetDetachGUI(false);
     wp->RefreshDisplay();
@@ -135,8 +161,8 @@ static void SetValues(bool first=false) {
 
   wp = (WndProperty*)wf->FindByName(TEXT("prpTaskSectorRadius"));
   if (wp) {
-    wp->SetVisible(AATEnabled==0);
-    wp->GetDataField()->SetAsFloat(round(SectorRadius*DISTANCEMODIFY*DISTANCE_ROUNDING)/DISTANCE_ROUNDING);
+    wp->SetVisible(gTaskType==TSK_DEFAULT);
+    wp->GetDataField()->SetAsFloat(lround(SectorRadius*DISTANCEMODIFY*DISTANCE_ROUNDING)/DISTANCE_ROUNDING);
     wp->GetDataField()->SetUnits(Units::GetDistanceName());
     wp->RefreshDisplay();
   }
@@ -162,35 +188,42 @@ static void SetValues(bool first=false) {
 
   wp = (WndProperty*)wf->FindByName(TEXT("prpMinTime"));
   if (wp) {
-    wp->SetVisible(AATEnabled>0 && (!PGOptimizeRoute || !ISPARAGLIDER));
+    wp->SetVisible(gTaskType==TSK_AAT);
     wp->GetDataField()->SetAsFloat(AATTaskLength);
     wp->RefreshDisplay();
   }
 
   wp = (WndProperty*)wf->FindByName(TEXT("prpEnableMultipleStartPoints"));
   if (wp) {
-    wp->SetVisible(!ISPARAGLIDER);
+    wp->SetVisible(gTaskType!=TSK_GP);
     wp->GetDataField()->Set(EnableMultipleStartPoints);
     wp->RefreshDisplay();
   }
 
-  wp = (WndProperty*)wf->FindByName(TEXT("prpAATEnabled"));
+  wp = (WndProperty*)wf->FindByName(TEXT("prpTaskType"));
   if (wp) {
-	if (ISPARAGLIDER && PGOptimizeRoute) {
-		wp->SetVisible(false);
-		AATEnabled=true;
-		wp->RefreshDisplay(); 
-	} else {
-		bool aw = (AATEnabled != 0);
-		wp->GetDataField()->Set(aw);
-		wp->RefreshDisplay(); 
-	}
+    DataField* dfe = wp->GetDataField();
+    if (first) {
+        // LKTOKEN  _@M1905_ "Default" 
+        dfe->addEnumText(MsgToken(1905));
+        // LKTOKEN _@M1902_ "AAT"
+        dfe->addEnumText(MsgToken(1902));
+        if(ISPARAGLIDER) {
+            // LKTOKEN  _@M1904_ "Race To Goal"
+            dfe->addEnumText(MsgToken(1904));
+        } else {
+            // LKTOKEN  _@M1903_ "Grand Prix"
+            dfe->addEnumText(MsgToken(1903));
+        }
+    }
+    dfe->Set(gTaskType);
+    wp->RefreshDisplay();      
   }
 
   WndButton* wb;
   wb = (WndButton *)wf->FindByName(TEXT("EditStartPoints"));
   if (wb) {
-    wb->SetVisible(EnableMultipleStartPoints!=0 && !ISPARAGLIDER);
+    wb->SetVisible(EnableMultipleStartPoints!=0 && gTaskType!=TSK_GP);
   }
 
 }
@@ -201,7 +234,7 @@ static void GetWaypointValues(void) {
   WndProperty* wp;
   bool changed = false;
 
-  if (!AATEnabled) {
+  if (!UseAATTarget()) {
     return;
   }
 
@@ -282,14 +315,14 @@ static void SetWaypointValues(bool first=false) {
       dfe->addEnumText(MsgToken(210));
 	// LKTOKEN  _@M590_ = "Sector" 
       dfe->addEnumText(MsgToken(590));
-      if(DoOptimizeRoute()) {
+      if(gTaskType==TSK_GP) {
         // Conical ESS
         dfe->addEnumText(MsgToken(2175));
         // Circle ESS
         dfe->addEnumText(MsgToken(2189));
       }
     }
-    dfe->SetDetachGUI(true); // disable call to OnAATEnabled
+    dfe->SetDetachGUI(true); // disable call to OnTaskType
     dfe->Set(Task[twItemIndex].AATType);
     dfe->SetDetachGUI(false);
     wp->RefreshDisplay();
@@ -386,11 +419,10 @@ static void ReadValues(void) {
                   wp->GetDataField()->GetAsBoolean());
   }
 
-  wp = (WndProperty*)wf->FindByName(TEXT("prpAATEnabled"));
+  wp = (WndProperty*)wf->FindByName(TEXT("prpTaskType"));
   if (wp) {
-    CHECK_CHANGED(AATEnabled,
-                  wp->GetDataField()->GetAsBoolean());
-	if (DoOptimizeRoute()) AATEnabled=true; // force it on
+    CHECK_CHANGED(gTaskType,
+                  wp->GetDataField()->GetAsInteger());
   }
 
   wp = (WndProperty*)wf->FindByName(TEXT("prpTaskFinishLine"));
@@ -448,7 +480,7 @@ static void ReadValues(void) {
 
 }
 
-static void OnAATEnabled(DataField *Sender, DataField::DataAccessKind_t Mode) {
+static void OnTaskType(DataField *Sender, DataField::DataAccessKind_t Mode) {
   switch(Mode){
     case DataField::daGet:
     break;
@@ -607,7 +639,7 @@ static CallBackTableEntry_t CallBackTable[]={
   ClickNotifyCallbackEntry(OnStartPointClicked),
   ClickNotifyCallbackEntry(OnMoveAfterClicked),
   ClickNotifyCallbackEntry(OnMoveBeforeClicked),
-  DataAccessCallbackEntry(OnAATEnabled),
+  DataAccessCallbackEntry(OnTaskType),
   ClickNotifyCallbackEntry(OnTaskRulesClicked),
   OnPaintCallbackEntry(OnTaskPointPicto),
   EndCallBackEntry()
@@ -618,9 +650,7 @@ void dlgTaskWaypointShowModal(int itemindex, int tasktype, bool addonly, bool Mo
 
     wf = dlgLoadFromXML(CallBackTable, ScreenLandscape ? IDR_XML_TASKWAYPOINT_L : IDR_XML_TASKWAYPOINT_P);
 
-  if (ISPARAGLIDER) {
-    if(DoOptimizeRoute()) 
-		AATEnabled=TRUE;
+  if (gTaskType!=TSK_GP) {
 	EnableMultipleStartPoints=false;
   }
 
@@ -695,7 +725,7 @@ void dlgTaskWaypointShowModal(int itemindex, int tasktype, bool addonly, bool Mo
       break;
     case 1:
       wStart->SetVisible(0);
-      if (AATEnabled) {
+      if (UseAATTarget()) {
 	wTurnpoint->SetVisible(0);
 	wAATTurnpoint->SetVisible(1);
       } else {

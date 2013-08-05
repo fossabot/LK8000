@@ -179,7 +179,7 @@ void MapWindow::DrawLook8000(LKSurface& Surface, const RECT& rc) {
     // TARGET NAME
     //
 
-    if (ISPARAGLIDER && UseGates() && ActiveTaskPoint == 0) {
+    if (UseGates() && ActiveTaskPoint == 0) {
         // if running a task, use the task index normally
         if (ValidTaskPoint(ActiveTaskPoint) != false) {
             if (DoOptimizeRoute())
@@ -289,7 +289,7 @@ void MapWindow::DrawLook8000(LKSurface& Surface, const RECT& rc) {
             }
         }
 
-        if ( !OverlayClock && ScreenLandscape && (!(ISPARAGLIDER && UseGates()))) {
+        if ( !OverlayClock && ScreenLandscape && (!((gTaskType==TSK_GP) && UseGates()))) {
             _stprintf(BufferValue + _tcslen(BufferValue), _T(" %s"), BufferUnit);
             LKWriteText(Surface, BufferValue, compass.cx, topmargin, WTMODE_OUTLINED, WTALIGN_RIGHT, OverColorRef, true);
         } else {
@@ -477,8 +477,6 @@ void MapWindow::DrawLook8000(LKSurface& Surface, const RECT& rc) {
     }
 
     // moved out from task paragliders stuff - this is painted on the right
-    if (ISPARAGLIDER) {
-
         if (UseGates() && ActiveTaskPoint == 0) {
             Surface.SelectObject(LK8OverlayBigFont);
 
@@ -584,7 +582,6 @@ void MapWindow::DrawLook8000(LKSurface& Surface, const RECT& rc) {
             }
             _skip_para_RightBottom: ;
         } // end no UseGates()
-    } // is paraglider
 
 
     //
@@ -823,7 +820,7 @@ void MapWindow::DrawLook8000(LKSurface& Surface, const RECT& rc) {
     //
     // CLOCK
     //
-    if ((OverlayClock && Overlay_TopRight) || (ISPARAGLIDER && UseGates())) {
+    if ((OverlayClock && Overlay_TopRight) || ((gTaskType==TSK_GP) && UseGates())) {
         LKFormatValue(LK_TIME_LOCALSEC, false, BufferValue, BufferUnit, BufferTitle);
         Surface.SelectObject(LK8OverlayMediumFont);
         if (!ScreenLandscape) {

@@ -186,7 +186,7 @@ void UpdateAnalysis(WndForm* pForm){
    {
       TCHAR timetext1[100];
       TCHAR timetext2[100];
-      if (AATEnabled) {
+      if (UseAATTarget()) {
         Units::TimeToText(timetext1, (int)CALCULATED_INFO.TaskTimeToGo);
         Units::TimeToText(timetext2, (int)CALCULATED_INFO.AATTimeToGo);
 

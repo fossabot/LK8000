@@ -1464,7 +1464,9 @@ void InputEvents::eventWaypointDetails(const TCHAR *misc) {
 }
 
 void InputEvents::eventTimeGates(const TCHAR *misc) {
+    if (gTaskType==TSK_GP) {
 	dlgTimeGatesShowModal();
+}
 }
 
 void InputEvents::eventMyMenu(const TCHAR *misc) {

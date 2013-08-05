@@ -130,7 +130,6 @@ void BeforeShutdown(void) {
 
   LockTaskData();
   Task[0].Index = -1;  ActiveTaskPoint = -1;
-  AATEnabled = FALSE;
   CloseWayPoints();
   UnlockTaskData();
 

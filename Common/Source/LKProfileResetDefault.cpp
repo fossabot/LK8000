@@ -137,7 +137,7 @@ void LKProfileResetDefault(void) {
 
   AircraftCategory = 0;
 
-  AATEnabled=FALSE;
+  gTaskType=TSK_DEFAULT;
 
   CheckSum = 1;
 
@@ -238,8 +238,8 @@ void LKProfileResetDefault(void) {
 
   TrackBar=1;
 
-  PGOptimizeRoute=true;
-  PGOptimizeRoute_Config = true;
+  TskOptimizeRoute=true;
+  TskOptimizeRoute_Config = true;
   GliderSymbol = 0;  // Default depending on mode type
 
   GlideBarMode = (GlideBarMode_t)gbDisabled;

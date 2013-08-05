@@ -189,6 +189,7 @@ void CheckAltitudeAlarms(const NMEA_INFO& Basic, const DERIVED_INFO& Calculated)
 
 void MasterTimeReset(void);
 bool DoOptimizeRoute(void);
+bool UseAATTarget(void);
 TCHAR * WhatTimeIsIt(void);
 void OutOfMemory(const TCHAR *where, int line);
 

@@ -441,3 +441,13 @@ Screen Orientation (see help)
 @1298
 Tracking Mode (see help)
 
+# New Task Type
+_@M1902_ "AAT"
+_@M1903_ "Grand Prix"
+_@M1904_ "Race To Goal"
+_@M1905_ "Default"
+_@M1906_ "Task Type"
+
+
+#help
+@1299

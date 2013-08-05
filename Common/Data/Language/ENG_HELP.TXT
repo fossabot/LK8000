@@ -1894,5 +1894,17 @@ tracking as long as LK8000 runs and has a valid GPS signal.
 We recomend in flight only because it transfers the takeoff and landing information for a correct log. (default)
 while permanent can be used to test your tracking settings on ground. (Note: Tracking need a falid GPS fix)
 
+
+@1299
+[Task Type]
+[Default]
+
+[AAT]
+Enables AAT tasks.  When enabled, the AAT observation parameters can be set for each turnpoint.
+
+[Grand Prix / Race To Goal]
+Common Task Type for Paraglider or Grand Prix Task Type for Glider.
+
+
 @9999
 No help available on this item!
