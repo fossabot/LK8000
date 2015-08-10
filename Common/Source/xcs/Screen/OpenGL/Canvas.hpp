@@ -239,7 +239,7 @@ public:
     glLineWidth(1);
 #endif
 
-    OutlineRectangleGL(left, top, right, bottom);
+    OutlineRectangleGL(left, top, right-1, bottom-1);
   }
 
   /**
