@@ -29,6 +29,8 @@ const LKPen LK_WHITE_PEN(Pen::SOLID, 1, COLOR_WHITE);
 #endif
 
 LKPen::~LKPen() {
+#ifdef USE_GDI
     Release();
+#endif
 }
 

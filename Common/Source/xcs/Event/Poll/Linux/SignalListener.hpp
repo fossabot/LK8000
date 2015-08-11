@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2014 The XCSoar Project
+  Copyright (C) 2000-2015 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -25,13 +25,13 @@ Copyright_License {
 #define XCSOAR_SIGNAL_LISTENER_HPP
 
 #include "IO/Async/FileEventHandler.hpp"
-#include "OS/FileDescriptor.hpp"
+#include "OS/UniqueFileDescriptor.hpp"
 
 class IOLoop;
 
 class SignalListener : private FileEventHandler {
   IOLoop &io_loop;
-  FileDescriptor fd;
+  UniqueFileDescriptor fd;
 
 public:
   explicit SignalListener(IOLoop &_io_loop)
@@ -62,7 +62,7 @@ protected:
 
 private:
   /* virtual methods from FileEventHandler */
-  virtual bool OnFileEvent(int fd, unsigned mask) override;
+  bool OnFileEvent(FileDescriptor fd, unsigned mask) override;
 };
 
 #endif
