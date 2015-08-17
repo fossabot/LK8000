@@ -18,7 +18,7 @@
 #include "Sound/Sound.h"
 
 void BottomSounds();
-extern int ProcessSubScreenVirtualKey(int X, int Y, long keytime, short vkmode);
+
 long VKtime=0;
 
 // vkmode 0=normal 1=gesture up 2=gesture down
@@ -30,12 +30,9 @@ int ProcessVirtualKey(int X, int Y, long keytime, short vkmode) {
 	short i, j;
 	short numpages=0;
 
-	static short s_xright=0, s_xleft=0;
-
 	short shortpress_yup, shortpress_ydown;
 	short longpress_yup, longpress_ydown;
 
-	static short s_bottomY=0;
 	#if 0 // 121123 CHECK AND REMOVE
 	static short oldMapSpaceMode=0;
 	#endif
@@ -51,41 +48,13 @@ int ProcessVirtualKey(int X, int Y, long keytime, short vkmode) {
 	#endif
 
 
-	if (DoInit[MDI_PROCESSVIRTUALKEY]) {
-
-		// calculate left and right starting from center
-		s_xleft=(MapWindow::MapRect.right+MapWindow::MapRect.left)/2 -(MapWindow::MapRect.right-MapWindow::MapRect.left)/6;
-		s_xright=(MapWindow::MapRect.right+MapWindow::MapRect.left)/2 + (MapWindow::MapRect.right-MapWindow::MapRect.left)/6;
-
-		// same for bottom navboxes: they do not exist in infobox mode
-		s_bottomY=MapWindow::Y_BottomBar-NIBLSCALE(2);
-
-		DoInit[MDI_PROCESSVIRTUALKEY]=false;
-	}
-
-
-        // LK v6: check we are not out of MapRect bounds.
-        if (X<MapWindow::MapRect.left||X>MapWindow::MapRect.right||Y<MapWindow::MapRect.top||Y>MapWindow::MapRect.bottom)
-            return ProcessSubScreenVirtualKey(X,Y,keytime,vkmode);
-
-        if (MapSpaceMode==MSM_WELCOME) {
-            SetModeType(LKMODE_MAP, MP_MOVING);
-            LKevent=LKEVENT_NONE;
-            NextModeIndex();
-            PreviousModeIndex();
-            MapWindow::RefreshMap();
-            LKSound(_T("LK_BEEP0.WAV"));
-            return 0;
-        }
-
-
 	// 120602 fix
 	// TopSize is dynamically assigned by DrawNearest,Drawcommon, DrawXX etc. so we cannot make static yups
 	//
-	longpress_yup=(short)((MapWindow::Y_BottomBar-TopSize)/3.7)+TopSize;
-	longpress_ydown=(short)(MapWindow::Y_BottomBar-(MapWindow::Y_BottomBar/3.7));
-	shortpress_yup=(short)((MapWindow::Y_BottomBar-TopSize)/2.7)+TopSize;
-	shortpress_ydown=(short)(MapWindow::Y_BottomBar-(MapWindow::Y_BottomBar/2.7));
+	longpress_yup=(short)((MainWindow.GetYBottomBar()-TopSize)/3.7)+TopSize;
+	longpress_ydown=(short)(MainWindow.GetYBottomBar()-(MainWindow.GetYBottomBar()/3.7));
+	shortpress_yup=(short)((MainWindow.GetYBottomBar()-TopSize)/2.7)+TopSize;
+	shortpress_ydown=(short)(MainWindow.GetYBottomBar()-(MainWindow.GetYBottomBar()/2.7));
 	
 	// do not consider navboxes, they are processed separately
 	// These are coordinates for up down center VKs
@@ -121,9 +90,9 @@ int ProcessVirtualKey(int X, int Y, long keytime, short vkmode) {
 		//
 		// CLICKS on NAVBOXES, any MapSpaceMode ok
 		//
-		if (Y>= s_bottomY ) { // TESTFIX 090930
+		if (Y>= MainWindow.GetYBottomBar() ) { // TESTFIX 090930
 
-			if ( X>s_xright ) {
+			if ( X>MainWindow.GetXBottomRight() ) {
 				// standard configurable mode
 				if (keytime >=CustomKeyTime) {
 					// 2 is right key
@@ -138,7 +107,7 @@ int ProcessVirtualKey(int X, int Y, long keytime, short vkmode) {
 				MapWindow::RefreshMap();
 				return 0;
 			}
-			if ( X<s_xleft ) { // following is ugly
+			if ( X<MainWindow.GetXBottomLeft() ) { // following is ugly
 				if (keytime >=CustomKeyTime) {
 					// 1 is left key
 					if (CustomKeyHandler(CKI_BOTTOMLEFT)) return 0;
@@ -458,8 +427,8 @@ gesture_left:
 	if (dontdrawthemap) {
 		if (Y>longpress_yup && Y<longpress_ydown) {
 			if (UseUngestures || !ISPARAGLIDER) {
-				if (X<=MapWindow::X_Left)  goto gesture_left;
-				if (X>=MapWindow::X_Right) goto gesture_right;
+				if (X<=MainWindow.GetXLeft())  goto gesture_left;
+				if (X>=MainWindow.GetXRight()) goto gesture_right;
 			}
 		}
 	}
@@ -547,23 +516,6 @@ gesture_left:
 		}
 	DoStatusMessage(_T("VirtualKey Error")); 
 	return 0;
-}
-
-
-
-// 
-// LK v6 Keyclicks out of MapRect but inside DrawRect. What we call SubScreen area.
-//
-int ProcessSubScreenVirtualKey(int X, int Y, long keytime, short vkmode) {
-
-    #if TESTBENCH
-    TCHAR buf[100];
-    _stprintf(buf,_T("SubScreen Key: X=%d Y=%d kt=%ld vk=%d"),X,Y,keytime,vkmode);
-    DoStatusMessage(buf);
-    #endif
-
-    return 0; // unmanaged keypress
-
 }
 
 

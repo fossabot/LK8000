@@ -16,6 +16,7 @@
 
 #ifndef USE_GDI
 #include "Screen/Canvas.hpp"
+#include "Poco/RunnableAdapter.h"
 #endif
 
 BOOL MapWindow::CLOSETHREAD = FALSE;
@@ -64,9 +65,9 @@ void MapWindow::Initialize() {
     ResetLabelDeclutter();
 
     // Default draw area is full screen, no opacity
-    MapRect = MainWindow.GetClientRect();
+    const RECT MapRect = GetMapRect();
     DrawRect = MapRect;
-    UpdateActiveScreenZone(MapRect);
+    UpdateLayout(MapRect.right - MapRect.left, MapRect.bottom - MapRect.top);
 
     UpdateTimeStats(true);
 
@@ -179,6 +180,8 @@ void MapWindow::DrawThread ()
 		
 		if (!mode.Is(Mode::MODE_TARGET_PAN) && mode.Is(Mode::MODE_PAN)) {
 
+            const RECT MapRect = GetMapRect();
+            
 			const int fromX=startScreen.x-targetScreen.x;
 			const int fromY=startScreen.y-targetScreen.y;
 
@@ -233,7 +236,7 @@ void MapWindow::DrawThread ()
 
 		// Now we can clear the flag. If it was off already, no problems.
 		OnFastPanning=false;
-                MainWindow.Redraw(MapRect);
+                MainWindow.Redraw(GetMapRect());
 		continue;
 
 	} else {
@@ -259,9 +262,9 @@ void MapWindow::DrawThread ()
 
 			POINT centerscreen;
 			centerscreen.x=ScreenSizeX/2; centerscreen.y=ScreenSizeY/2;
-			DrawMapScale(BackBufferSurface,MapRect,false);
-			DrawCrossHairs(BackBufferSurface, centerscreen, MapRect);
-            MainWindow.Redraw(MapRect);
+			DrawMapScale(BackBufferSurface,GetMapRect(),false);
+			DrawCrossHairs(BackBufferSurface, centerscreen, GetMapRect());
+            MainWindow.Redraw(GetMapRect());
 			continue;
 		} 
 		#endif // --------------------------
@@ -273,7 +276,7 @@ _dontbitblt:
 	lastdrawwasbitblitted=false;
 	MapWindow::UpdateInfo(&GPS_INFO, &CALCULATED_INFO);
 
-	RenderMapWindow(DrawSurface, MapRect);
+	RenderMapWindow(DrawSurface, GetMapRect());
     
 	if (!ForceRenderMap && !first_run) {
             DrawSurface.CopyTo(BackBufferSurface);
@@ -284,9 +287,9 @@ _dontbitblt:
 	if (mode.AnyPan() && !mode.Is(Mode::MODE_TARGET_PAN) && !OnFastPanning) {
 		POINT centerscreen;
 		centerscreen.x=ScreenSizeX/2; centerscreen.y=ScreenSizeY/2;
-		DrawMapScale(BackBufferSurface,MapRect,false);
-		DrawCompass(BackBufferSurface, MapRect, DisplayAngle);
-		DrawCrossHairs(BackBufferSurface, centerscreen, MapRect);
+		DrawMapScale(BackBufferSurface,GetMapRect(),false);
+		DrawCompass(BackBufferSurface, GetMapRect(), DisplayAngle);
+		DrawCrossHairs(BackBufferSurface, centerscreen, GetMapRect());
 	}
 
 	UpdateTimeStats(false);
@@ -302,7 +305,7 @@ _dontbitblt:
 	if (ProgramStarted==psInitDone) {
 		ProgramStarted = psFirstDrawDone;
 	}
-    MainWindow.Redraw(MapRect);
+    MainWindow.Redraw(GetMapRect());
 
   } // Big LOOP
 
@@ -313,13 +316,13 @@ _dontbitblt:
 
 }
 
-Poco::ThreadTarget MapWindow::MapWindowThreadRun(MapWindow::DrawThread);
+Poco::RunnableAdapter<MapWindow> MapWindow::MapWindowThreadRun(MainWindow, &MapWindow::DrawThread);
 Poco::Thread MapWindowThread;
 #endif
 
 void MapWindow::CreateDrawingThread(void)
 {
-  Initialize();
+  MainWindow.Initialize();
 
   CLOSETHREAD = FALSE;
   THREADEXIT = FALSE;

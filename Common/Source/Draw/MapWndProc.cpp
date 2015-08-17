@@ -24,7 +24,6 @@
 #include "TunedParameter.h"
 
 #define KEYDEBOUNCE 100
-extern int ProcessSubScreenVirtualKey(int X, int Y, long keytime, short vkmode);
 
 // #define DEBUG_VIRTUALKEYS
 // #define DEBUG_MAPINPUT
@@ -52,7 +51,6 @@ int MapWindow::ScaleCurrent;
 
 POINT MapWindow::Orig_Screen;
 
-RECT MapWindow::MapRect; // the entire screen area in use
 RECT MapWindow::DrawRect; // the portion of MapRect for drawing terrain, topology etc. (the map)
 
 
@@ -143,32 +141,16 @@ DERIVED_INFO MapWindow::DerivedDrawInfo;
 
 extern void ShowMenu();
 
+MapWindow::MapWindow() {
+    // Values to be remembered
+    pressed = false;
+    Xstart = 0.; 
+    Ystart = 0.;
+    Xlat = 0.; 
+    Ylat = 0.;
+    distance = 0.;
 
-// Values to be remembered
-bool MapWindow::pressed = false;
-double MapWindow::Xstart = 0.; 
-double MapWindow::Ystart = 0.;
-
-PeriodClock MapWindow::tsDownTime;
-DWORD dwInterval=0L;
-
-double MapWindow::Xlat = 0.; 
-double MapWindow::Ylat = 0.;
-double MapWindow::distance = 0.;
-
-// Touch Screen Events Area
-short MapWindow::Y_BottomBar;
-
-POINT MapWindow::P_Doubleclick_bottomright;
-POINT MapWindow::P_MenuIcon_DrawBottom;
-POINT MapWindow::P_MenuIcon_noDrawBottom;
-
-POINT MapWindow::P_UngestureLeft;
-POINT MapWindow::P_UngestureRight;
-
-short MapWindow::Y_Up, MapWindow::Y_Down;
-short MapWindow::X_Left, MapWindow::X_Right;
-
+}
 //
 // Dragged position on screen: start and and end coordinates (globals!)
 //
@@ -194,28 +176,33 @@ void MapWindow::_OnSize(int cx, int cy) {
 #endif    
 }
 
-void MapWindow::UpdateActiveScreenZone(RECT rc) {
+void MapWindow::UpdateLayout(int cx, int cy) {
+    Y_BottomBar = cy - BottomSize;
 
-    #if TESTBENCH
-    StartupStore(_T("... ** UpdateActiveScreenZone %d,%d,%d,%d\n"),rc.left,rc.top,rc.right,rc.bottom);
-    #endif
+    P_Doubleclick_bottomright.x = cx - BottomSize - NIBLSCALE(15);
+    P_Doubleclick_bottomright.y = cy - BottomSize - NIBLSCALE(15);
 
-    Y_BottomBar = rc.bottom - BottomSize;
-    P_Doubleclick_bottomright.x = rc.right - BottomSize - NIBLSCALE(15);
-    P_Doubleclick_bottomright.y = rc.bottom - BottomSize - NIBLSCALE(15);
+    // These were all using MapRect
     P_MenuIcon_DrawBottom.y = Y_BottomBar - 14;
-    P_MenuIcon_noDrawBottom.y = rc.bottom - AircraftMenuSize;
-    P_MenuIcon_DrawBottom.x = rc.right - AircraftMenuSize;
+    P_MenuIcon_DrawBottom.x = cx - AircraftMenuSize;
+    
+    P_MenuIcon_noDrawBottom.y = cy - AircraftMenuSize;
     P_MenuIcon_noDrawBottom.x = P_MenuIcon_DrawBottom.x;
+		
+    X_BottomLeft = (cx / 2) - (cy / 6);
+	X_BottomRight = (cx / 2) + (cy / 6);
+        
     P_UngestureLeft.x = CompassMenuSize;
     P_UngestureLeft.y = CompassMenuSize;
-    P_UngestureRight.x = rc.right - CompassMenuSize;
+    
+    P_UngestureRight.x = cx - CompassMenuSize;
     P_UngestureRight.y = CompassMenuSize;
+    
     Y_Up = Y_BottomBar / 2;
     Y_Down = Y_BottomBar - Y_Up;
-    X_Left = (rc.right+rc.left)/2 - (rc.right-rc.left)/3;
-    X_Right = (rc.right+rc.left)/2 + (rc.right-rc.left)/3;    
-
+    
+    X_Left = (cx / 2) - (cx / 3);
+    X_Right = (cx / 2) + (cx / 3);    
 }
 
 void MapWindow::_OnCreate(Window& Wnd, int cx, int cy) {
@@ -226,8 +213,9 @@ void MapWindow::_OnCreate(Window& Wnd, int cx, int cy) {
 #else
     LKWindowSurface WindowSurface(Wnd);
     BackBufferSurface.Create(WindowSurface, cx, cy);
-#endif
     DrawSurface.Create(WindowSurface, cx, cy);
+#endif
+
     TempSurface.Create(WindowSurface, cx, cy);
     hdcbuffer.Create(WindowSurface, cx, cy);
     hdcMask.Create(WindowSurface, cx, cy);
@@ -436,14 +424,8 @@ void MapWindow::_OnLButtonUp(const POINT& Pos) {
         // while processing a virtual key for example, and also for acceleration.
         bool dontdrawthemap = (DONTDRAWTHEMAP);
 
-        dwInterval = tsDownTime.Elapsed();
+        int dwInterval = tsDownTime.Elapsed();
         tsDownTime.Reset(); // do it once forever
-
-        // LK v6: check we are not out of MapRect bounds.
-        if (Pos.x<MapWindow::MapRect.left||Pos.x>MapWindow::MapRect.right||Pos.y<MapWindow::MapRect.top||Pos.y>MapWindow::MapRect.bottom) {
-            ProcessSubScreenVirtualKey(Pos.x, Pos.y, dwInterval, LKGESTURE_NONE);
-            return;
-        }
 
         int gestDir = LKGESTURE_NONE;
         int gestDist = -1;
@@ -533,7 +515,7 @@ void MapWindow::_OnLButtonUp(const POINT& Pos) {
 #endif
                 } else {
                     // We are here in any case only when dwInterval is <VKLONGCLICK
-                    if (dwInterval >= (unsigned) CustomKeyTime) {
+                    if (dwInterval >= CustomKeyTime) {
                         if (!CustomKeyHandler(CKI_BOTTOMICON)) {
                             ShowMenu();
                         }
@@ -547,7 +529,7 @@ void MapWindow::_OnLButtonUp(const POINT& Pos) {
 
         // MultiMap custom specials, we use same geometry of MSM_MAP
 
-        if ((dwInterval < (unsigned) AIRSPACECLICK) || ISPARAGLIDER) {
+        if ((dwInterval < AIRSPACECLICK) || ISPARAGLIDER) {
             if (NOTANYPAN && IsMultiMapCustom()) {
                 if ((Pos.x <= P_UngestureLeft.x) && (Pos.y <= P_UngestureLeft.y)) {
 
@@ -754,7 +736,7 @@ void MapWindow::_OnLButtonUp(const POINT& Pos) {
             //
             // Finally process normally a click on the moving map.
             //
-            if (dwInterval < (unsigned) AIRSPACECLICK) { // original and untouched interval
+            if (dwInterval < AIRSPACECLICK) { // original and untouched interval
                 {
                     if (!mode.AnyPan() && (UseUngestures || !ISPARAGLIDER)) {
                         if (Pos.x <= X_Left) {

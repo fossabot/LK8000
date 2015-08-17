@@ -1287,13 +1287,13 @@ void InputEvents::eventPan(const TCHAR *misc) {
   else if (_tcscmp(misc, TEXT("down")) == 0 || _tcscmp(misc, TEXT("zoomout")) == 0)
     MapWindow::zoom.EventScaleZoom(-1); // fixed v58
   else if (_tcscmp(misc, TEXT("left")) == 0 || _tcscmp(misc, TEXT("moveleft")) == 0)
-    MapWindow::Event_PanCursor(1,0);
+    MainWindow.Event_PanCursor(1,0);
   else if (_tcscmp(misc, TEXT("right")) == 0 || _tcscmp(misc, TEXT("moveright")) == 0)
-    MapWindow::Event_PanCursor(-1,0);
+    MainWindow.Event_PanCursor(-1,0);
   else if (_tcscmp(misc, TEXT("moveup")) == 0)
-    MapWindow::Event_PanCursor(0,1);
+    MainWindow.Event_PanCursor(0,1);
   else if (_tcscmp(misc, TEXT("movedown")) == 0)
-    MapWindow::Event_PanCursor(0,-1);
+    MainWindow.Event_PanCursor(0,-1);
   else if (_tcscmp(misc, TEXT("show")) == 0) {
     if (MapWindow::mode.AnyPan())
       DoStatusMessage(gettext(TEXT("_@M858_"))); // Pan mode ON

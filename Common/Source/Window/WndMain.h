@@ -44,6 +44,8 @@ protected:
 
     virtual void OnTimer();
 
+    RECT GetMapRect() const { return GetClientRect(); }
+    
 private:
     bool _MouseButtonDown;
     bool _isRunning;

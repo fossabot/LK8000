@@ -144,6 +144,8 @@ bool MapWindow::Event_InteriorAirspaceDetails(double lon, double lat) {
 
 
 void MapWindow::Event_PanCursor(int dx, int dy) {
+  const RECT MapRect = GetMapRect();
+
   int X= (MapRect.right+MapRect.left)/2;
   int Y= (MapRect.bottom+MapRect.top)/2;
   double Xstart, Ystart, Xnew, Ynew;

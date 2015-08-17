@@ -109,7 +109,10 @@ void ReinitScreen(void) {
   UnlockTerrainDataGraphics();
 
   // DoInits will require new values (at least PROCESSVIRTUALKEYS)
-  MainWindow.UpdateActiveScreenZone(rc);
+  // Since MapWindow is doing static inits, we want them to be recalculated at the end of
+  // initializations, since some values in use might have been not available yet, for example BottomSize.
+  // maybe useless, already done by MainWindow::OnSize()
+  MainWindow.UpdateLayout(rc.right - rc.left, rc.bottom - rc.top);
 
   Reset_Single_DoInits(MDI_DRAWLOOK8000);
   Reset_Single_DoInits(MDI_DRAWTRI);
@@ -121,7 +124,6 @@ void ReinitScreen(void) {
   Reset_Single_DoInits(MDI_DRAWNEAREST);
   Reset_Single_DoInits(MDI_DRAWTARGET);
   Reset_Single_DoInits(MDI_DRAWVARIO);
-  Reset_Single_DoInits(MDI_PROCESSVIRTUALKEY);
   Reset_Single_DoInits(MDI_ONPAINTLISTITEM);
   Reset_Single_DoInits(MDI_DRAWMAPSCALE);
   Reset_Single_DoInits(MDI_CHECKLABELBLOCK);
@@ -141,8 +143,11 @@ void ReinitScreen(void) {
   #endif
 
 
-  MapWindow::Initialize();
+  MainWindow.Initialize();
+
+#ifndef ENABLE_OPENGL
   MapWindow::ResumeDrawingThread();
+#endif
   MainWindow.SetToForeground();
 
   return;

@@ -24,7 +24,7 @@
 #include "Time/PeriodClock.hpp"
 
 #ifndef ENABLE_OPENGL
-#include "Poco/ThreadTarget.h"
+#include "Poco/RunnableAdapter.h"
 #include "Poco/Thread.h"
 #include "Poco/Event.h"
 #endif
@@ -214,6 +214,8 @@ typedef struct
 
 class MapWindow {
  public:
+     MapWindow();
+     
   /** 
    * @brief Class responsible for handling all Map Zoom activities
    * 
@@ -441,7 +443,6 @@ class MapWindow {
   static Zoom zoom;
   static Mode mode;
 
-  static RECT MapRect;			// See explanation in MapWndProc
   static RECT DrawRect;
   static bool ForceVisibilityScan;
   static bool ThermalBarDrawn;
@@ -479,7 +480,7 @@ class MapWindow {
 			    const int skip);
   static void LatLon2ScreenMultimap(pointObj *ptin, POINT *ptout, const int n, const int skip);
 
-  static void Initialize();
+  void Initialize();
   static void CloseDrawingThread(void);
   static void CreateDrawingThread(void);
   static void SuspendDrawingThread(void);
@@ -497,7 +498,7 @@ class MapWindow {
   // input events or reused code
   static void Event_Pan(int vswitch);
   static void Event_TerrainTopology(int vswitch);
-  static void Event_PanCursor(int dx, int dy);
+  void Event_PanCursor(int dx, int dy);
   static bool Event_InteriorAirspaceDetails(double lon, double lat);
   static bool Event_NearestWaypointDetails(double lon, double lat);
 
@@ -654,8 +655,8 @@ private:
 
 #ifndef ENABLE_OPENGL
 private:
-  static void DrawThread ();
-  static Poco::ThreadTarget MapWindowThreadRun;
+  void DrawThread ();
+  static Poco::RunnableAdapter<MapWindow> MapWindowThreadRun;
   static Poco::Event drawTriggerEvent;
 
   static LKBitmapSurface DrawSurface;
@@ -692,18 +693,6 @@ private:
   static void RefreshMap(); // set public VENTA
 
   static rectObj screenbounds_latlon;
-
-  // this property is calculated by UpdateActiveScreenZone() on OnCreate(...) and OnSize(...) or user call
-  static short Y_BottomBar; // this is different from BottomBarY
-  static POINT P_Doubleclick_bottomright; // squared area for screen lock doubleclick, normally on right bottombar
-  static POINT P_MenuIcon_DrawBottom; // Menu icon area (topleft coord)
-  static POINT P_MenuIcon_noDrawBottom; // same, without bottombar drawn, forgot why it is different
-
-  static POINT P_UngestureLeft;
-  static POINT P_UngestureRight;
-
-  static short Y_Up, Y_Down; // Up and Down keys vertical limits, ex. for zoom in out on map
-  static short X_Left, X_Right; // Ungestured fast clicks on infopages (THE SAME AS IN: PROCESS_VIRTUALKEY)
   
   static BOOL THREADRUNNING;
   static BOOL THREADEXIT;
@@ -799,30 +788,53 @@ private:
   static bool TargetMoved(double &longitude, double &latitude);
 
     // Touch Screen Events Area
-    static void UpdateActiveScreenZone(RECT rc);
+    void UpdateLayout(int cx, int cy);
 
 protected:
-	static void _OnSize(int cx, int cy);
-	static void _OnCreate(Window& Wnd, int cx, int cy);
+	void _OnSize(int cx, int cy);
+	void _OnCreate(Window& Wnd, int cx, int cy);
 	static void _OnDestroy();
+    
+    virtual RECT GetMapRect() const = 0;
     
 /////////////////////////////////////////////////////        
 // Mouse Event Handling /////////////////////////////
-	static void _OnDragMove(const POINT& Pos);
+	void _OnDragMove(const POINT& Pos);
     
-	static void _OnLButtonDown(const POINT& Pos);
-    static void _OnLButtonUp(const POINT& Pos);
+	void _OnLButtonDown(const POINT& Pos);
+    void _OnLButtonUp(const POINT& Pos);
     
-	static void _OnLButtonDblClick(const POINT& Pos);
+	void _OnLButtonDblClick(const POINT& Pos);
     
     // Values to be remembered
-    static bool pressed;
-    static double Xstart, Ystart;
-    static PeriodClock tsDownTime;
-    static double Xlat, Ylat;
-    static double distance;
+    bool pressed;
+    double Xstart, Ystart;
+    PeriodClock tsDownTime; 
+    double Xlat, Ylat;
+    double distance;
 
+    // this property is calculated by UpdateLayout() on OnCreate(...) and OnSize(...) or user call
+    short Y_BottomBar; // this is different from BottomBarY
+    POINT P_Doubleclick_bottomright; // squared area for screen lock doubleclick, normally on right bottombar
+    POINT P_MenuIcon_DrawBottom; // Menu icon area (topleft coord)
+    POINT P_MenuIcon_noDrawBottom; // same, without bottombar drawn, forgot why it is different
+    short X_BottomLeft, X_BottomRight; // left and Right click on BottomBar
     
+    POINT P_UngestureLeft;
+    POINT P_UngestureRight;
+
+    short Y_Up, Y_Down; // Up and Down keys vertical limits, ex. for zoom in out on map
+    short X_Left, X_Right; // Ungestured fast clicks on infopages (THE SAME AS IN: PROCESS_VIRTUALKEY)
+
+public:
+    short GetYBottomBar() const { return Y_BottomBar; }
+    short GetXBottomLeft() const { return X_BottomLeft; }
+    short GetXBottomRight() const { return X_BottomRight; }
+
+    short GetXLeft() const { return X_Left; }
+    short GetXRight() const { return X_Right; }
+    
+protected:
 /////////////////////////////////////////////////////    
     
 /////////////////////////////////////////////////////    

@@ -43,7 +43,6 @@
 	MDI_DRAWTARGET,			// screen change
 	MDI_DRAWVARIO,			// screen change
 	MDI_GETOVERTARGETHEADER,	// language change
-	MDI_PROCESSVIRTUALKEY,		// screen change
 	MDI_ONPAINTLISTITEM,		// screen change, font change
 	MDI_DRAWMAPSCALE,		// screen change
 	MDI_CHECKLABELBLOCK,		// screen change
